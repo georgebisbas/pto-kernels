@@ -2,6 +2,42 @@
 
 Build and packaging helper scripts for `pto_kernels`.
 
+## run_sim_tests.sh
+
+Runs the pytest suite against the CANN CA model — no NPU required. Every batch of
+test ids is launched in its own `msprof op simulator` process, so a case that
+stalls the simulator or overruns msprof's `--timeout` only costs its batch
+instead of truncating the run.
+
+**Usage**
+
+```bash
+./scripts/run_sim_tests.sh [test-path-or-node-id ...]
+```
+
+| Environment | Default | Description |
+|-------------|---------|-------------|
+| `ASCEND_HOME_PATH` / `ASCEND_TOOLKIT_HOME` | — | CANN installation to simulate against (required) |
+| `MSPROF_SOC_VERSION` | `Ascend910B2` | CA-model target |
+| `NPU_DEVICE` | `npu:0` | Device string the tests bind to (a bare index is rejected) |
+| `BATCH_SIZE` | `8` | Test ids per `msprof` run; `0` runs the whole selection in one process |
+| `BUDGET` | `900` | Wall-clock seconds per batch |
+| `MSPROF_TIMEOUT` | `BUDGET - 60` | msprof's own `--timeout` |
+| `KEEP_SIM_OUT` | `0` | Keep the msprof output directory |
+
+**Examples**
+
+```bash
+# whole suite, batches of 8
+./scripts/run_sim_tests.sh
+
+# one file, smaller batches and a longer budget
+BATCH_SIZE=4 BUDGET=1800 ./scripts/run_sim_tests.sh tests/test_tri_inv_ns.py
+```
+
+Tests marked `requires_device` are skipped automatically under the CA model
+(flash attention, for example, needs a real FFTS control address).
+
 ## build.sh
 
 Compiles the project locally using CMake against an Ascend CANN toolkit installation.

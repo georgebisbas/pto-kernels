@@ -121,6 +121,21 @@ More end-to-end usage patterns live under [`examples/`](examples) (JIT C++ kerne
 make test
 ```
 
+Without an NPU, the CANN CA model runs the same tests:
+
+```bash
+make test_sim                                  # whole suite, batched
+make test_sim SIM_TESTS=tests/test_abs.py      # one file
+BATCH_SIZE=4 BUDGET=1800 make test_sim SIM_TESTS=tests/test_tri_inv_ns.py
+```
+
+`scripts/run_sim_tests.sh` gives every batch of tests its own
+`msprof op simulator` process, so a case that stalls or overruns the simulator's
+budget only costs its batch instead of truncating the run. Requires
+`ASCEND_HOME_PATH` (or `ASCEND_TOOLKIT_HOME`) to point at a CANN install with
+`tools/simulator/Ascend910B2`. Tests marked `requires_device` are skipped
+automatically — flash attention, for example, needs a real FFTS control address.
+
 ---
 
 ## Repository structure

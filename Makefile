@@ -8,7 +8,7 @@
 PTO_LIB_PATH    ?= $(ASCEND_TOOLKIT_HOME)
 CSRC_KERNEL_DIR := csrc/kernel
 
-.PHONY: clean setup_once build wheel install docs test test_tri_inv
+.PHONY: clean setup_once build wheel install docs test test_sim test_tri_inv
 
 clean:
 	rm -rf build/ dist/ extra-info/ *.egg-info/ kernel_meta/ pto_kernels-*.whl
@@ -61,6 +61,12 @@ docs:
 
 test:
 	pytest -v tests/
+
+# CA-model lane: no NPU needed, one msprof process per batch of tests.
+# BATCH_SIZE / BUDGET are read by scripts/run_sim_tests.sh.
+SIM_TESTS ?= tests/
+test_sim:
+	bash scripts/run_sim_tests.sh $(SIM_TESTS)
 
 test_tri_inv:
 	pytest tests/test_tri_inv_*.py

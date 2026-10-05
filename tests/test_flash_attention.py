@@ -13,6 +13,10 @@ import torch
 
 from pto_kernels import pto_flash_attention
 
+# The host wrapper asks the runtime for its FFTS control address, which the CA
+# model does not provide, so these cases need a real device.
+pytestmark = pytest.mark.requires_device
+
 
 HEAD_SIZE = 128
 NON_CAUSAL_ATOL = 1e-4
