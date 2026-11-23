@@ -9,9 +9,11 @@ at a fixed address.
 | file | what it shows |
 |---|---|
 | `fig1_speedup.png` | Speedup by input length. int8 (int32 accumulator) is the only dtype that moves; float32 and float16 sit on the noise floor by construction. |
-| `fig2_attribution.png` | The saving against the number of serialized 8-element vector operations the column fold removes, `(blocks·S − S) / 8`. The predictor comes from the host tiling rule alone; the fit is 11.4 ns per operation, R² = 0.9998. |
+| `fig2_attribution.png` | The saving against the number of serialized 8-element vector operations the column fold removes, `(blocks·S − S) / 8`. The predictor comes from the host tiling rule alone; the fit is 11.4 ns per operation, R² = 0.9981. |
 
 Harness, raw CSVs and plot sources live in
 `pypto-3.0-notes/pto-kernels/int32_partials_plots/`.
+
+Measured against `main` at `21c484d`, i.e. on top of #300.
 
 Earlier campaigns: `fold-chunk-figures` (#297), `tail-rows-figures` (#300).
