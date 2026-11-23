@@ -69,8 +69,21 @@ at::Tensor run_cube_reduce(const at::Tensor& x) {
   // is shifts and masks. Carrying the exponent instead of the side keeps three
   // 64-bit divisions off a host path that is itself a large part of the
   // latency at small lengths.
+  // int8 gets a wider tile. The tile side is picked from the element count, so
+  // at a side of 128 every dtype moves 16384 elements per tile -- 64 KB of
+  // fp32 but only 16 KB of int8 -- while the per-tile cost (one TLOAD, one
+  // TMOV, one mad, four flag round trips) is the same either way. int8 pays it
+  // on a quarter of the bytes. Measured on one 910B2 at a fixed length,
+  // doubling the side is worth 1.28x to fp32 and 1.96x to int8 at 64 M, and
+  // int8's curve has not flattened by 128.
+  //
+  // int8 is also the only dtype that can go wider: L0B holds 64 KB, which is
+  // exactly a 256x256 int8 tile, while the same tile would need 128 KB of fp16
+  // or 256 KB of fp32.
   const uint32_t size_log2 =
-      x.numel() >= 128 * 128 ? 7 : (x.numel() >= 64 * 64 ? 6 : 5);
+      dtype == at::kChar && x.numel() >= 256 * 256
+          ? 8
+          : (x.numel() >= 128 * 128 ? 7 : (x.numel() >= 64 * 64 ? 6 : 5));
   const int64_t size = int64_t{1} << size_log2;
   const uint32_t num_tiles =
       static_cast<uint32_t>(x.numel() >> (2 * size_log2));

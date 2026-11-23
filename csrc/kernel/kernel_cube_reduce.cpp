@@ -424,6 +424,13 @@ AICORE void CubeReduceDispatch(__gm__ InputT* input,
     case 128:
       CubeReduce<InputT, OutputT, 128>(input, partials, num_tiles, tail_rows);
       break;
+    case 256:
+      // int8 only; the host never picks this for a float type, whose 256x256
+      // tile would not fit L0B.
+      if constexpr (std::is_same<InputT, int8_t>::value) {
+        CubeReduce<InputT, OutputT, 256>(input, partials, num_tiles, tail_rows);
+      }
+      break;
   }
 }
 
@@ -446,6 +453,12 @@ AICORE void CompleteCubeReduceDispatch(__gm__ InputT* input,
     case 128:
       CompleteCubeReduce<InputT, OutputT, 128>(input, partials, output, blocks,
                                                tail_offset, tail_len);
+      break;
+    case 256:
+      if constexpr (std::is_same<InputT, int8_t>::value) {
+        CompleteCubeReduce<InputT, OutputT, 256>(input, partials, output,
+                                                 blocks, tail_offset, tail_len);
+      }
       break;
   }
 }
